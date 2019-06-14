@@ -1,9 +1,10 @@
 import * as Express from 'express';
+import * as bodyParser from 'body-parser';
 import * as connPool from './connection-pool';
 import * as settings from './settings';
 import * as fs from 'fs';
 import { RaceSummaryRecord } from './record/race-summary-record';
-import { PoolConnection } from 'promise-mysql';
+import { PoolConnection, Connection } from 'promise-mysql';
 import { OddsTimeRecord } from './record/odds-time-record';
 import { UmrnOddsRecord } from './record/umrn-odds-record';
 import { KaisaiRecord } from './record/kaisai-record';
@@ -14,6 +15,8 @@ import { TnpkOddsDiffRecord } from './record/tnpk-odds-diff-record';
 const app = Express();
 const pool = new connPool.ConnectionPool();
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -289,6 +292,8 @@ app.get(
                     raceNo,
                     oddsTimeNo,
                     umaNo,
+                    kaisaiCd,
+                    raceNo,
                     umaNo,
                 ]);
             })
@@ -300,6 +305,7 @@ app.get(
                     record.ninkiNo = element['NINKI_NO'];
                     record.umaNo = element['UMA_NO'];
                     record.umrnOdds = element['UMRN_ODDS'];
+                    record.markCd = element['MARK_CD'];
                     record.prevUmrnOddsRecord = prevRecord;
                     arr.push(record);
                     if (prevRecord !== null && prevRecord.umrnOdds !== null && record.umrnOdds !== null) {
@@ -357,9 +363,40 @@ app.get(
                     arr.push(record);
                 });
                 res.json(arr);
-                return console.log(arr);
+                // return console.log(arr);
             })
             .catch(err => {
+                console.error(err);
+                res.status(500).json({});
+            })
+            .finally(() => {
+                pool.releaseConnection(connection);
+            });
+    },
+);
+
+app.post(
+    '/race/mark/:kaisaiCd/:raceNo/:umaNo',
+    (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+        let connection: PoolConnection;
+        const kaisaiCd = req.params.kaisaiCd;
+        const raceNo = req.params.raceNo;
+        const umaNo = req.params.umaNo;
+        const markCd = req.body['markCd'];
+        pool.getConnection()
+            .then(conn => {
+                connection = conn;
+                return connection.beginTransaction();
+            })
+            .then(() => {
+                const sql = fs.readFileSync(process.cwd() + '/sql/insert_race_uma_mark.sql', 'utf8');
+                return connection.query(sql, [kaisaiCd, raceNo, umaNo, markCd, markCd]);
+            })
+            .then(() => {
+                connection.commit();
+            })
+            .catch(err => {
+                connection.rollback();
                 console.error(err);
                 res.status(500).json({});
             })
