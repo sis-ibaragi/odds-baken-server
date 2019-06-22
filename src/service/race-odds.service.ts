@@ -1,5 +1,6 @@
 import * as Express from 'express';
 import * as fs from 'fs';
+import { PoolConnection } from 'promise-mysql';
 import { ConnectionPool } from '../connection-pool';
 import { OddsTimeRecord } from '../record/odds-time-record';
 import { TanOddsRecord } from '../record/tan-odds-record';
@@ -11,9 +12,10 @@ export class RaceOddsService {
     constructor(private connPool: ConnectionPool) {}
 
     async getOddsTimes(req: Express.Request, res: Express.Response): Promise<OddsTimeRecord[]> {
-        let conn;
+        let conn: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
             const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_time_list.sql', 'utf8');
             const rows = await conn.query(sql, [req.params.kaisaiCd, req.params.raceNo]);
             const list: OddsTimeRecord[] = new Array();
@@ -24,8 +26,10 @@ export class RaceOddsService {
                 record.umrnOddsTime = element['UMRN_ODDS_TIME'];
                 list.push(record);
             });
+            await conn.commit();
             return list;
         } catch (error) {
+            await conn.rollback();
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -33,7 +37,7 @@ export class RaceOddsService {
     }
 
     async getTanOdds(req: Express.Request, res: Express.Response): Promise<TanOddsRecord[]> {
-        let conn;
+        let conn: PoolConnection;
         try {
             // リクエストパラメータを取得
             const kaisaiCd = req.params.kaisaiCd;
@@ -41,9 +45,12 @@ export class RaceOddsService {
             const oddsTimeNo = req.params.oddsTimeNo;
 
             conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+            // 馬連 1 位の馬番を取得
             const sql1 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_rank1_list.sql', 'utf8');
             const rows1 = await conn.query(sql1, [kaisaiCd, raceNo, oddsTimeNo, kaisaiCd, raceNo, oddsTimeNo]);
             const umaNo = rows1[0]['UMA_NO'];
+
             const sql2 = fs.readFileSync(process.cwd() + '/sql/select_odds_tan_list.sql', 'utf8');
             const rows2 = await conn.query(sql2, [
                 kaisaiCd,
@@ -68,8 +75,10 @@ export class RaceOddsService {
                 record.idoFlg = record.ninkiNo <= umrnNinkiNo - 5;
                 list.push(record);
             });
+            await conn.commit();
             return list;
         } catch (error) {
+            await conn.rollback();
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -77,7 +86,7 @@ export class RaceOddsService {
     }
 
     async getFukuOdds(req: Express.Request, res: Express.Response): Promise<FukuOddsRecord[]> {
-        let conn;
+        let conn: PoolConnection;
         try {
             // リクエストパラメータを取得
             const kaisaiCd = req.params.kaisaiCd;
@@ -85,10 +94,12 @@ export class RaceOddsService {
             const oddsTimeNo = req.params.oddsTimeNo;
 
             conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+            // 馬連 1 位の馬番を取得
             const sql1 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_rank1_list.sql', 'utf8');
             const rows1 = await conn.query(sql1, [kaisaiCd, raceNo, oddsTimeNo, kaisaiCd, raceNo, oddsTimeNo]);
-
             const umaNo = rows1[0]['UMA_NO'];
+
             const sql2 = fs.readFileSync(process.cwd() + '/sql/select_odds_fuku_list.sql', 'utf8');
             const rows2 = await conn.query(sql2, [
                 kaisaiCd,
@@ -113,8 +124,10 @@ export class RaceOddsService {
                 record.idoFlg = record.ninkiNo <= umrnNinkiNo - 5;
                 list.push(record);
             });
+            await conn.commit();
             return list;
         } catch (error) {
+            await conn.rollback();
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -122,7 +135,7 @@ export class RaceOddsService {
     }
 
     async getUmrnOdds(req: Express.Request, res: Express.Response): Promise<UmrnOddsRecord[]> {
-        let conn;
+        let conn: PoolConnection;
         try {
             // リクエストパラメータを取得
             const kaisaiCd = req.params.kaisaiCd;
@@ -130,10 +143,12 @@ export class RaceOddsService {
             const oddsTimeNo = req.params.oddsTimeNo;
 
             conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+            // 馬連 1 位の馬番を取得
             const sql1 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_rank1_list.sql', 'utf8');
             const rows1 = await conn.query(sql1, [kaisaiCd, raceNo, oddsTimeNo, kaisaiCd, raceNo, oddsTimeNo]);
-
             const umaNo = rows1[0]['UMA_NO'];
+
             const sql2 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_list.sql', 'utf8');
             const rows2 = await conn.query(sql2, [
                 kaisaiCd,
@@ -171,9 +186,10 @@ export class RaceOddsService {
                 }
                 prevRecord = record;
             });
-
+            await conn.commit();
             return list;
         } catch (error) {
+            await conn.rollback();
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -181,7 +197,7 @@ export class RaceOddsService {
     }
 
     async getTnpkOddsDiff(req: Express.Request, res: Express.Response): Promise<TnpkOddsDiffRecord[]> {
-        let conn;
+        let conn: PoolConnection;
         try {
             // リクエストパラメータを取得
             const kaisaiCd = req.params.kaisaiCd;
@@ -189,6 +205,8 @@ export class RaceOddsService {
             const oddsTimeNo = req.params.oddsTimeNo;
 
             conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+
             const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_tnpk_time_diff.sql', 'utf8');
             const rows = await conn.query(sql, [kaisaiCd, raceNo, oddsTimeNo - 1, oddsTimeNo]);
             const list: TnpkOddsDiffRecord[] = new Array();
@@ -205,8 +223,10 @@ export class RaceOddsService {
                 record.fukuUpFlg = record.fukuUpRt > 1;
                 list.push(record);
             });
+            await conn.commit();
             return list;
         } catch (error) {
+            await conn.rollback();
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -214,7 +234,7 @@ export class RaceOddsService {
     }
 
     async postRaceUmaMark(req: Express.Request, res: Express.Response): Promise<void> {
-        let conn;
+        let conn: PoolConnection;
         try {
             // リクエストパラメータを取得
             const kaisaiCd = req.params.kaisaiCd;
