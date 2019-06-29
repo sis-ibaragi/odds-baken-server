@@ -3,8 +3,8 @@ select
 	v1.KAISAI_NM,
 	v1.RACE_NO,
 	v1.UMA_NUM,
-	date_format(v1.TNPK_ODDS_TIME, '%H:%i') as TNPK_ODDS_TIME,
-	date_format(v1.UMRN_ODDS_TIME, '%H:%i') as UMRN_ODDS_TIME,
+	to_char(v1.TNPK_ODDS_TIME, 'HH24:MI') as TNPK_ODDS_TIME,
+	to_char(v1.UMRN_ODDS_TIME, 'HH24:MI') as UMRN_ODDS_TIME,
 	v1.TAN_ODDS,
 	v1.UMRN_ODDS,
 	v1.FUKU_ODDS_MAX,
@@ -40,27 +40,27 @@ from (
 					ul.UMA_NO
 			)	as UMA_RNUM
 		from
-			kaisai ka
-			inner join race rc
+			KAISAI ka
+			inner join RACE rc
 				on	ka.KAISAI_CD = rc.KAISAI_CD
-			inner join race_uma_list ul
+			inner join RACE_UMA_LIST ul
 				on	rc.KAISAI_CD = ul.KAISAI_CD
 				and	rc.RACE_NO = ul.RACE_NO
-			inner join race_odds ro
+			inner join RACE_ODDS ro
 				on	rc.KAISAI_CD = ro.KAISAI_CD
 				and	rc.RACE_NO = ro.RACE_NO
 				and	ro.ODDS_TIME_NO = ?
-			left outer join race_odds_tan tn
+			left outer join RACE_ODDS_TAN tn
 				on	ro.KAISAI_CD = tn.KAISAI_CD
 				and	ro.RACE_NO = tn.RACE_NO
 				and	ro.ODDS_TIME_NO = tn.ODDS_TIME_NO
 				and	tn.SORT_NO = 10
-			left outer join race_odds_umrn ur
+			left outer join RACE_ODDS_UMRN ur
 				on	ro.KAISAI_CD = ur.KAISAI_CD
 				and	ro.RACE_NO = ur.RACE_NO
 				and	ro.ODDS_TIME_NO = ur.ODDS_TIME_NO
 				and	ur.SORT_NO = 1
-			left outer join race_odds_fuku fk
+			left outer join RACE_ODDS_FUKU fk
 				on	ro.KAISAI_CD = fk.KAISAI_CD
 				and	ro.RACE_NO = fk.RACE_NO
 				and	ro.ODDS_TIME_NO = fk.ODDS_TIME_NO

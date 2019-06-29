@@ -1,5 +1,5 @@
 select
-	date_format(KAISAI_DT, '%Y-%m-%d') as KAISAI_DT
+	to_char(KAISAI_DT, 'YYYY-MM-DD') as KAISAI_DT
 from
 	KAISAI
 group by
