@@ -1,28 +1,28 @@
 import * as Express from 'express';
 import * as fs from 'fs';
-import { PoolConnection } from 'promise-mysql';
 import { ConnectionPool } from '../connection-pool';
 import { KaisaiRecord } from '../record/kaisai-record';
 import { RaceSummaryRecord } from '../record/race-summary-record';
+import { PoolClient, QueryResult } from 'pg';
 
 export class KaisaiService {
     constructor(private connPool: ConnectionPool) {}
 
     async getKaisaiDates(req: Express.Request, res: Express.Response): Promise<string[]> {
-        let conn: PoolConnection;
+        let conn: PoolClient;
         try {
             conn = await this.connPool.getConnection();
-            await conn.beginTransaction();
+            await conn.query('BEGIN');
             const sql = fs.readFileSync(process.cwd() + '/sql/select_kaisai_dt_list.sql', 'utf8');
-            const rows = await conn.query(sql);
+            const result: QueryResult = await conn.query(sql);
             const list: string[] = Array();
-            rows.forEach(row => {
+            result.rows.forEach(row => {
                 list.push(row['KAISAI_DT']);
             });
-            await conn.commit();
+            await conn.query('COMMIT');
             return list;
         } catch (error) {
-            await conn.rollback();
+            await conn.query('ROLLBACK');
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -30,14 +30,14 @@ export class KaisaiService {
     }
 
     async getKaisaiSummary(req: Express.Request, res: Express.Response): Promise<RaceSummaryRecord[]> {
-        let conn: PoolConnection;
+        let conn: PoolClient;
         try {
             conn = await this.connPool.getConnection();
-            await conn.beginTransaction();
+            await conn.query('BEGIN');
             const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_summary_list.sql', 'utf8');
-            const rows = await conn.query(sql, [1, req.params.date]);
+            const result: QueryResult = await conn.query(sql, [1, req.params.date]);
             const list: RaceSummaryRecord[] = Array();
-            rows.forEach(element => {
+            result.rows.forEach(element => {
                 const record = new RaceSummaryRecord();
                 record.kaisaiCd = element['KAISAI_CD'];
                 record.kaisaiNm = element['KAISAI_NM'];
@@ -62,10 +62,10 @@ export class KaisaiService {
                 }
                 list.push(record);
             });
-            await conn.commit();
+            await conn.query('COMMIT');
             return list;
         } catch (error) {
-            await conn.rollback();
+            await conn.query('ROLLBACK');
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
@@ -73,21 +73,21 @@ export class KaisaiService {
     }
 
     async getKaisaiInfo(req: Express.Request, res: Express.Response): Promise<KaisaiRecord> {
-        let conn: PoolConnection;
+        let conn: PoolClient;
         try {
             conn = await this.connPool.getConnection();
-            await conn.beginTransaction();
+            await conn.query('BEGIN');
             const sql = fs.readFileSync(process.cwd() + '/sql/select_kaisai_info.sql', 'utf8');
-            const rows = await conn.query(sql, [req.params.kaisaiCd]);
-            const row = rows[0];
+            const result: QueryResult = await conn.query(sql, [req.params.kaisaiCd]);
+            const row = result.rows[0];
             const record = new KaisaiRecord();
             record.kaisaiCd = row['KAISAI_CD'];
             record.kaisaiNm = row['KAISAI_NM'];
             record.kaisaiDt = row['KAISAI_DT'];
-            await conn.commit();
+            await conn.query('COMMIT');
             return record;
         } catch (error) {
-            await conn.rollback();
+            await conn.query('ROLLBACK');
             throw error;
         } finally {
             this.connPool.releaseConnection(conn);
