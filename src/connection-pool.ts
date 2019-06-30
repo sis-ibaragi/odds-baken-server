@@ -5,29 +5,18 @@ export class ConnectionPool {
     private pool: mysql.Pool;
 
     constructor() {
-        this.pool = mysql.createPool({
-            host: settings.DatabaseSettings.HOST,
-            user: settings.DatabaseSettings.USER,
-            password: settings.DatabaseSettings.PASSWORD,
-            database: settings.DatabaseSettings.DATABASE,
-            connectionLimit: settings.DatabaseSettings.CONNECTION_LIMIT,
-        });
+        this.pool = mysql.createPool(settings.DATABASE_URL);
         this.pool.on('connection', (connection: mysql.PoolConnection) => {
-            console.log('mysql.Pool.getConnection was called.');
+            console.log('the pool established a new connection to database.');
+        });
+        this.pool.on('acquire', (connection: mysql.PoolConnection) => {
+            console.log('a connection wass checked out from the pool.');
         });
         this.pool.on('release', (connection: mysql.PoolConnection) => {
-            console.log('mysql.Pool.releaseConnection was called.');
+            console.log('a connection was returned to the pool.');
         });
         this.pool.on('error', err => {
-            console.error(
-                'mysql.MysqlError was occurred.',
-                err.code,
-                err.errno,
-                err.sqlState,
-                err.sql,
-                err.name,
-                err.message,
-            );
+            console.error('error was occurred.', err.code, err.errno, err.sqlState, err.sql, err.name, err.message);
         });
     }
 
