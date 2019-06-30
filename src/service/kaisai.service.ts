@@ -1,4 +1,3 @@
-import * as Express from 'express';
 import * as fs from 'fs';
 import { PoolConnection } from 'promise-mysql';
 import { ConnectionPool } from '../connection-pool';
@@ -8,7 +7,7 @@ import { RaceSummaryRecord } from '../record/race-summary-record';
 export class KaisaiService {
     constructor(private connPool: ConnectionPool) {}
 
-    async getKaisaiDates(req: Express.Request, res: Express.Response): Promise<string[]> {
+    async getKaisaiDates(): Promise<string[]> {
         let conn: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
@@ -29,13 +28,13 @@ export class KaisaiService {
         }
     }
 
-    async getKaisaiSummary(req: Express.Request, res: Express.Response): Promise<RaceSummaryRecord[]> {
+    async getKaisaiSummary(kaisaiDt: string, oddsTimeNo: number): Promise<RaceSummaryRecord[]> {
         let conn: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_summary_list.sql', 'utf8');
-            const rows = await conn.query(sql, [1, req.params.date]);
+            const rows = await conn.query(sql, [oddsTimeNo, kaisaiDt]);
             const list: RaceSummaryRecord[] = Array();
             rows.forEach(element => {
                 const record = new RaceSummaryRecord();
@@ -72,13 +71,13 @@ export class KaisaiService {
         }
     }
 
-    async getKaisaiInfo(req: Express.Request, res: Express.Response): Promise<KaisaiRecord> {
+    async getKaisaiInfo(kaisaiCd: string): Promise<KaisaiRecord> {
         let conn: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             const sql = fs.readFileSync(process.cwd() + '/sql/select_kaisai_info.sql', 'utf8');
-            const rows = await conn.query(sql, [req.params.kaisaiCd]);
+            const rows = await conn.query(sql, [kaisaiCd]);
             const row = rows[0];
             const record = new KaisaiRecord();
             record.kaisaiCd = row['KAISAI_CD'];

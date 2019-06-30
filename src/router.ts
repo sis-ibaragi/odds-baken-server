@@ -9,9 +9,11 @@ const kaisaiService = new KaisaiService(connPool);
 const raceOddsService = new RaceOddsService(connPool);
 
 router.get('/kaisai/dates', async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    console.log(req.url + ' was called.');
+    console.log(`${req.url} was called.`);
     try {
-        const ret = await kaisaiService.getKaisaiDates(req, res);
+        // Service を呼び出す
+        const ret = await kaisaiService.getKaisaiDates();
+        // 結果を JSON 形式でレスポンスへ書き込む
         res.json(ret);
     } catch (error) {
         console.error('Error was occurred...', error);
@@ -20,9 +22,14 @@ router.get('/kaisai/dates', async (req: Express.Request, res: Express.Response, 
 });
 
 router.get('/kaisai/:date/summary', async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    console.log(req.url + ' was called.');
+    console.log(`${req.url} was called.`);
     try {
-        const ret = await kaisaiService.getKaisaiSummary(req, res);
+        // リクエストパラメータを取得
+        const kaisaiDt = req.params.date;
+        const oddsTimeNo = 1;
+        // Service を呼び出す
+        const ret = await kaisaiService.getKaisaiSummary(kaisaiDt, oddsTimeNo);
+        // 結果を JSON 形式でレスポンスへ書き込む
         res.json(ret);
     } catch (error) {
         console.error('Error was occurred...', error);
@@ -31,9 +38,13 @@ router.get('/kaisai/:date/summary', async (req: Express.Request, res: Express.Re
 });
 
 router.get('/kaisai/:kaisaiCd', async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    console.log(req.url + ' was called.');
+    console.log(`${req.url} was called.`);
     try {
-        const ret = await kaisaiService.getKaisaiInfo(req, res);
+        // リクエストパラメータを取得
+        const kaisaiCd = req.params.kaisaiCd;
+        // Service を呼び出す
+        const ret = await kaisaiService.getKaisaiInfo(kaisaiCd);
+        // 結果を JSON 形式でレスポンスへ書き込む
         res.json(ret);
     } catch (error) {
         console.error('Error was occurred...', error);
@@ -44,9 +55,14 @@ router.get('/kaisai/:kaisaiCd', async (req: Express.Request, res: Express.Respon
 router.get(
     '/race/odds/:kaisaiCd/:raceNo/times',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.getOddsTimes(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getOddsTimes(kaisaiCd, raceNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
@@ -58,9 +74,15 @@ router.get(
 router.get(
     '/race/odds/:kaisaiCd/:raceNo/:oddsTimeNo/tan',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.getTanOdds(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            const oddsTimeNo = req.params.oddsTimeNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getTanOdds(kaisaiCd, raceNo, oddsTimeNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
@@ -71,9 +93,15 @@ router.get(
 router.get(
     '/race/odds/:kaisaiCd/:raceNo/:oddsTimeNo/fuku',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.getFukuOdds(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            const oddsTimeNo = req.params.oddsTimeNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getFukuOdds(kaisaiCd, raceNo, oddsTimeNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
@@ -85,9 +113,15 @@ router.get(
 router.get(
     '/race/odds/:kaisaiCd/:raceNo/:oddsTimeNo/umrn',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.getUmrnOdds(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            const oddsTimeNo = req.params.oddsTimeNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getUmrnOdds(kaisaiCd, raceNo, oddsTimeNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
@@ -99,9 +133,15 @@ router.get(
 router.get(
     '/race/odds/:kaisaiCd/:raceNo/:oddsTimeNo/diff',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.getTnpkOddsDiff(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            const oddsTimeNo = req.params.oddsTimeNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getTnpkOddsDiff(kaisaiCd, raceNo, oddsTimeNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
@@ -113,9 +153,16 @@ router.get(
 router.post(
     '/race/odds/:kaisaiCd/:raceNo/:umaNo/mark',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-        console.log(req.url + ' was called.');
+        console.log(`${req.url} was called.`);
         try {
-            const ret = await raceOddsService.postRaceUmaMark(req, res);
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            const umaNo = req.params.umaNo;
+            const markCd = req.body['markCd'];
+            // Service を呼び出す
+            const ret = await raceOddsService.postRaceUmaMark(kaisaiCd, raceNo, umaNo, markCd);
+            // 結果を JSON 形式でレスポンスへ書き込む
             res.json(ret);
         } catch (error) {
             console.error('Error was occurred...', error);
