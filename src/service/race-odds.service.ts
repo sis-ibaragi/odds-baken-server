@@ -1,4 +1,3 @@
-import * as Express from 'express';
 import * as fs from 'fs';
 import { PoolConnection } from 'promise-mysql';
 import { ConnectionPool } from '../connection-pool';
@@ -11,13 +10,13 @@ import { TnpkOddsDiffRecord } from '../record/tnpk-odds-diff-record';
 export class RaceOddsService {
     constructor(private connPool: ConnectionPool) {}
 
-    async getOddsTimes(req: Express.Request, res: Express.Response): Promise<OddsTimeRecord[]> {
+    async getOddsTimes(kaisaiCd: string, raceNo: number): Promise<OddsTimeRecord[]> {
         let conn: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_time_list.sql', 'utf8');
-            const rows = await conn.query(sql, [req.params.kaisaiCd, req.params.raceNo]);
+            const rows = await conn.query(sql, [kaisaiCd, raceNo]);
             const list: OddsTimeRecord[] = new Array();
             rows.forEach(element => {
                 const record = new OddsTimeRecord();
@@ -36,43 +35,29 @@ export class RaceOddsService {
         }
     }
 
-    async getTanOdds(req: Express.Request, res: Express.Response): Promise<TanOddsRecord[]> {
+    async getTanOdds(kaisaiCd: string, raceNo: number, oddsTimeNo: number): Promise<TanOddsRecord[]> {
         let conn: PoolConnection;
         try {
-            // リクエストパラメータを取得
-            const kaisaiCd = req.params.kaisaiCd;
-            const raceNo = req.params.raceNo;
-            const oddsTimeNo = req.params.oddsTimeNo;
-
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
-            // 馬連 1 位の馬番を取得
-            const sql1 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_rank1_list.sql', 'utf8');
-            const rows1 = await conn.query(sql1, [kaisaiCd, raceNo, oddsTimeNo, kaisaiCd, raceNo, oddsTimeNo]);
-            const umaNo = rows1[0]['UMA_NO'];
+            // 馬連オッズ一覧を取得
+            const umrnOddsList: UmrnOddsRecord[] = await this.getUmrnOdds(kaisaiCd, raceNo, oddsTimeNo);
+            // 馬番をキーに馬連オッズ情報を Map に設定
+            const umrnOddsMap: Map<number, UmrnOddsRecord> = new Map();
+            umrnOddsList.forEach(row => {
+                umrnOddsMap.set(row.umaNo, row);
+            });
 
-            const sql2 = fs.readFileSync(process.cwd() + '/sql/select_odds_tan_list.sql', 'utf8');
-            const rows2 = await conn.query(sql2, [
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-                umaNo,
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-                umaNo,
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-            ]);
+            const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_tan_list.sql', 'utf8');
+            const rows = await conn.query(sql, [kaisaiCd, raceNo, oddsTimeNo]);
             const list: TanOddsRecord[] = new Array();
-            rows2.forEach(data => {
+            rows.forEach(data => {
                 const record = new TanOddsRecord();
                 record.ninkiNo = data['NINKI_NO'];
                 record.umaNo = data['UMA_NO'];
                 record.tanOdds = data['TAN_ODDS'];
-                const umrnNinkiNo: number = data['UMRN_NINKI_NO'];
-                record.idoFlg = record.ninkiNo <= umrnNinkiNo - 5;
+                // 馬連オッズの人気順と 5 以上乖離がある場合は移動フラグを ON にする
+                record.idoFlg = record.ninkiNo <= umrnOddsMap.get(record.umaNo).ninkiNo - 5;
                 list.push(record);
             });
             await conn.commit();
@@ -85,44 +70,40 @@ export class RaceOddsService {
         }
     }
 
-    async getFukuOdds(req: Express.Request, res: Express.Response): Promise<FukuOddsRecord[]> {
+    async getFukuOdds(kaisaiCd: string, raceNo: number, oddsTimeNo: number): Promise<FukuOddsRecord[]> {
         let conn: PoolConnection;
         try {
-            // リクエストパラメータを取得
-            const kaisaiCd = req.params.kaisaiCd;
-            const raceNo = req.params.raceNo;
-            const oddsTimeNo = req.params.oddsTimeNo;
-
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
-            // 馬連 1 位の馬番を取得
-            const sql1 = fs.readFileSync(process.cwd() + '/sql/select_odds_umrn_rank1_list.sql', 'utf8');
-            const rows1 = await conn.query(sql1, [kaisaiCd, raceNo, oddsTimeNo, kaisaiCd, raceNo, oddsTimeNo]);
-            const umaNo = rows1[0]['UMA_NO'];
+            // 馬連オッズ一覧を取得
+            const umrnOddsList: UmrnOddsRecord[] = await this.getUmrnOdds(kaisaiCd, raceNo, oddsTimeNo);
+            // 馬番をキーに馬連オッズ情報を Map に設定
+            const umrnOddsMap: Map<number, UmrnOddsRecord> = new Map();
+            umrnOddsList.forEach(row => {
+                umrnOddsMap.set(row.umaNo, row);
+            });
 
-            const sql2 = fs.readFileSync(process.cwd() + '/sql/select_odds_fuku_list.sql', 'utf8');
-            const rows2 = await conn.query(sql2, [
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-                umaNo,
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-                umaNo,
-                kaisaiCd,
-                raceNo,
-                oddsTimeNo,
-            ]);
+            const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_fuku_list.sql', 'utf8');
+            const rows = await conn.query(sql, [kaisaiCd, raceNo, oddsTimeNo]);
             const list: FukuOddsRecord[] = new Array();
-            rows2.forEach(data => {
+            let prevRecord: FukuOddsRecord = null;
+            let count: number = 0;
+            let ninkiNo: number = 1;
+            rows.forEach(data => {
+                count++;
                 const record = new FukuOddsRecord();
-                record.ninkiNo = data['NINKI_NO'];
                 record.umaNo = data['UMA_NO'];
                 record.fukuOdds = data['FUKU_ODDS_MAX'];
-                const umrnNinkiNo: number = data['UMRN_NINKI_NO'];
-                record.idoFlg = record.ninkiNo <= umrnNinkiNo - 5;
+                // 前レコードとオッズが異なる場合は人気順をカウントアップする
+                if (prevRecord !== null && prevRecord.fukuOdds !== record.fukuOdds) {
+                    ninkiNo = count;
+                }
+                record.ninkiNo = ninkiNo;
+                // 馬連オッズの人気順と 5 以上乖離がある場合は移動フラグを ON にする
+                record.idoFlg = record.ninkiNo <= umrnOddsMap.get(record.umaNo).ninkiNo - 5;
                 list.push(record);
+                // 前レコードを一時保存
+                prevRecord = record;
             });
             await conn.commit();
             return list;
@@ -134,14 +115,9 @@ export class RaceOddsService {
         }
     }
 
-    async getUmrnOdds(req: Express.Request, res: Express.Response): Promise<UmrnOddsRecord[]> {
+    async getUmrnOdds(kaisaiCd: string, raceNo: number, oddsTimeNo: number): Promise<UmrnOddsRecord[]> {
         let conn: PoolConnection;
         try {
-            // リクエストパラメータを取得
-            const kaisaiCd = req.params.kaisaiCd;
-            const raceNo = req.params.raceNo;
-            const oddsTimeNo = req.params.oddsTimeNo;
-
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             // 馬連 1 位の馬番を取得
@@ -165,12 +141,19 @@ export class RaceOddsService {
             ]);
             const list: UmrnOddsRecord[] = new Array();
             let prevRecord: UmrnOddsRecord = null;
+            let ninkiNo: number = 1;
+            let count: number = 0;
             rows2.forEach(element => {
+                count++;
                 const record: UmrnOddsRecord = new UmrnOddsRecord();
-                record.ninkiNo = element['NINKI_NO'];
                 record.umaNo = element['UMA_NO'];
                 record.umrnOdds = element['UMRN_ODDS'];
                 record.markCd = element['MARK_CD'];
+                // 前レコードとオッズが異なる場合は人気順をカウントアップする
+                if (prevRecord !== null && prevRecord.umrnOdds !== record.umrnOdds) {
+                    ninkiNo = count;
+                }
+                record.ninkiNo = ninkiNo;
                 record.prevUmrnOddsRecord = prevRecord;
                 list.push(record);
                 if (prevRecord !== null && prevRecord.umrnOdds !== null && record.umrnOdds !== null) {
@@ -196,14 +179,9 @@ export class RaceOddsService {
         }
     }
 
-    async getTnpkOddsDiff(req: Express.Request, res: Express.Response): Promise<TnpkOddsDiffRecord[]> {
+    async getTnpkOddsDiff(kaisaiCd: string, raceNo: number, oddsTimeNo: number): Promise<TnpkOddsDiffRecord[]> {
         let conn: PoolConnection;
         try {
-            // リクエストパラメータを取得
-            const kaisaiCd = req.params.kaisaiCd;
-            const raceNo = req.params.raceNo;
-            const oddsTimeNo = req.params.oddsTimeNo;
-
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
 
@@ -233,15 +211,9 @@ export class RaceOddsService {
         }
     }
 
-    async postRaceUmaMark(req: Express.Request, res: Express.Response): Promise<void> {
+    async postRaceUmaMark(kaisaiCd: string, raceNo: number, umaNo: string, markCd: string): Promise<void> {
         let conn: PoolConnection;
         try {
-            // リクエストパラメータを取得
-            const kaisaiCd = req.params.kaisaiCd;
-            const raceNo = req.params.raceNo;
-            const umaNo = req.params.umaNo;
-            const markCd = req.body['markCd'];
-
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             const sql = fs.readFileSync(process.cwd() + '/sql/insert_race_uma_mark.sql', 'utf8');
