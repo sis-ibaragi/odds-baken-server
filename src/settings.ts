@@ -1,9 +1,9 @@
 export namespace DatabaseSettings {
-    export const HOST: string = 'z1ntn1zv0f1qbh8u.cbetxkdyhwsb.us-east-1.rds.amazonaws.com';
+    export const HOST: string = 'localhost';
     export const PORT: number = 3306;
-    export const USER: string = 'yxyinobu5mwa1z62';
-    export const PASSWORD: string = 'kffkuci4o0c4h8jq';
-    export const DATABASE: string = 'ihq2xbiptmm0mjtp';
+    export const USER: string = 'appuser01';
+    export const PASSWORD: string = 'p@ssw0rd';
+    export const DATABASE: string = 'appdb01';
     export const CONNECTION_LIMIT: number = 10;
 }
 
