@@ -1,6 +1,19 @@
 {
-    "extends": ["tslint-config-airbnb"],
+    "extends": [
+        "tslint-config-airbnb"
+    ],
     "rules": {
-        "ter-indent": [true, 4]
+        "indent": [
+            4,
+            2
+        ],
+        "ter-indent": [
+            true,
+            4
+        ],
+        "max-line-length": [
+            true,
+            120
+        ]
     }
 }
