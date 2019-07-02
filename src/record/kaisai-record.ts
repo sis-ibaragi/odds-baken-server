@@ -1,5 +1,5 @@
 export class KaisaiRecord {
-  kaisaiCd: string;
-  kaisaiNm: string;
-  kaisaiDt: string;
+    kaisaiCd: string;
+    kaisaiNm: string;
+    kaisaiDt: string;
 }

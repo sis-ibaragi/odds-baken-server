@@ -15,7 +15,7 @@ export class ConnectionPool {
         this.pool.on('release', (connection: mysql.PoolConnection) => {
             console.log('a connection was returned to the pool.');
         });
-        this.pool.on('error', err => {
+        this.pool.on('error', (err) => {
             console.error('error was occurred.', err.code, err.errno, err.sqlState, err.sql, err.name, err.message);
         });
     }

@@ -1,5 +1,5 @@
 export class OddsTimeRecord {
-  oddsTimeNo: number;
-  tnpkOddsTime: string;
-  umrnOddsTime: string;
+    oddsTimeNo: number;
+    tnpkOddsTime: string;
+    umrnOddsTime: string;
 }

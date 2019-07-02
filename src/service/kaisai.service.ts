@@ -5,17 +5,17 @@ import { KaisaiRecord } from '../record/kaisai-record';
 import { RaceSummaryRecord } from '../record/race-summary-record';
 
 export class KaisaiService {
-    constructor(private connPool: ConnectionPool) {}
+    constructor(private connPool: ConnectionPool) { }
 
     async getKaisaiDates(): Promise<string[]> {
-        let conn: PoolConnection;
+        let conn!: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
-            const sql = fs.readFileSync(process.cwd() + '/sql/select_kaisai_dt_list.sql', 'utf8');
+            const sql = fs.readFileSync(`${process.cwd()}/sql/select_kaisai_dt_list.sql`, 'utf8');
             const rows = await conn.query(sql);
             const list: string[] = Array();
-            rows.forEach(row => {
+            rows.forEach((row) => {
                 list.push(row['KAISAI_DT']);
             });
             await conn.commit();
@@ -29,14 +29,14 @@ export class KaisaiService {
     }
 
     async getKaisaiSummary(kaisaiDt: string, oddsTimeNo: number): Promise<RaceSummaryRecord[]> {
-        let conn: PoolConnection;
+        let conn!: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
-            const sql = fs.readFileSync(process.cwd() + '/sql/select_odds_summary_list.sql', 'utf8');
+            const sql = fs.readFileSync(`${process.cwd()}/sql/select_odds_summary_list.sql`, 'utf8');
             const rows = await conn.query(sql, [oddsTimeNo, kaisaiDt]);
             const list: RaceSummaryRecord[] = Array();
-            rows.forEach(element => {
+            rows.forEach((element) => {
                 const record = new RaceSummaryRecord();
                 record.kaisaiCd = element['KAISAI_CD'];
                 record.kaisaiNm = element['KAISAI_NM'];
@@ -72,11 +72,11 @@ export class KaisaiService {
     }
 
     async getKaisaiInfo(kaisaiCd: string): Promise<KaisaiRecord> {
-        let conn: PoolConnection;
+        let conn!: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
-            const sql = fs.readFileSync(process.cwd() + '/sql/select_kaisai_info.sql', 'utf8');
+            const sql = fs.readFileSync(`${process.cwd()}/sql/select_kaisai_info.sql`, 'utf8');
             const rows = await conn.query(sql, [kaisaiCd]);
             const row = rows[0];
             const record = new KaisaiRecord();
