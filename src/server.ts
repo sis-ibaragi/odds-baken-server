@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser';
 import router from './router';
 
 const app = Express();
+const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -15,7 +16,7 @@ app.use((req, res, next) => {
 
 app.use('/api', router);
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
     console.log('listening on port 3000...');
 });
 export default app;
