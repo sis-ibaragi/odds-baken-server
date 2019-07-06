@@ -8,5 +8,6 @@ where
 	and fk.RACE_NO = ?
 	and fk.ODDS_TIME_NO = ?
 order by
-	NINKI_NO,
+	FUKU_ODDS_MAX,
+	FUKU_ODDS_MIN,
 	UMA_NO
