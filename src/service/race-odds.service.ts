@@ -163,7 +163,7 @@ export class RaceOddsService {
                         prevRecord.kabeCd = prevRecord.diffRt >= 1.8 ? '01' : '';
                     } else {
                         prevRecord.kabeCd = prevRecord.diffRt >= 1.8 ? '10' : '';
-                        if (prevRecord.kabeCd !== null) {
+                        if (prevRecord.kabeCd) {
                             prevRecord.prevUmrnOddsRecord.kabeCd = prevRecord.kabeCd;
                         }
                     }
