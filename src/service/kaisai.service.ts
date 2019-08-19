@@ -28,13 +28,13 @@ export class KaisaiService {
         }
     }
 
-    async getKaisaiSummary(kaisaiDt: string, oddsTimeNo: number): Promise<RaceSummaryRecord[]> {
+    async getKaisaiSummary(kaisaiCd: string, oddsTimeNo: number): Promise<RaceSummaryRecord[]> {
         let conn!: PoolConnection;
         try {
             conn = await this.connPool.getConnection();
             await conn.beginTransaction();
             const sql = fs.readFileSync(`${process.cwd()}/sql/select_odds_summary_list.sql`, 'utf8');
-            const rows = await conn.query(sql, [oddsTimeNo, kaisaiDt]);
+            const rows = await conn.query(sql, [oddsTimeNo, kaisaiCd]);
             const list: RaceSummaryRecord[] = Array();
             rows.forEach((element) => {
                 const record = new RaceSummaryRecord();
@@ -59,6 +59,31 @@ export class KaisaiService {
                 } else if (record.umrnAnaFlg || record.tanAnaFlg) {
                     record.anaFlgCnt = 1;
                 }
+                list.push(record);
+            });
+            await conn.commit();
+            return list;
+        } catch (error) {
+            await conn.rollback();
+            throw error;
+        } finally {
+            this.connPool.releaseConnection(conn);
+        }
+    }
+
+    async getKaisaiList(kaisaiDt: string): Promise<KaisaiRecord[]> {
+        let conn: PoolConnection;
+        try {
+            conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+            const sql = fs.readFileSync(`${process.cwd()}/sql/select_kaisai_list.sql`, 'utf8');
+            const rows = await conn.query(sql, [kaisaiDt]);
+            const list: KaisaiRecord[] = Array();
+            rows.forEach((element) => {
+                const record = new KaisaiRecord();
+                record.kaisaiCd = element['KAISAI_CD'];
+                record.kaisaiNm = element['KAISAI_NM'];
+                record.kaisaiDt = element['KAISAI_DT'];
                 list.push(record);
             });
             await conn.commit();
