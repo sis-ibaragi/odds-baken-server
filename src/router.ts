@@ -21,21 +21,40 @@ router.get('/kaisai/dates', async (req: Express.Request, res: Express.Response, 
     }
 });
 
-router.get('/kaisai/:date/summary', async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    console.log(`${req.url} was called.`);
-    try {
-        // リクエストパラメータを取得
-        const kaisaiDt = req.params.date;
-        const oddsTimeNo = 1;
-        // Service を呼び出す
-        const ret = await kaisaiService.getKaisaiSummary(kaisaiDt, oddsTimeNo);
-        // 結果を JSON 形式でレスポンスへ書き込む
-        res.json(ret);
-    } catch (error) {
-        console.error('Error was occurred...', error);
-        res.status(500).json({ error });
-    }
-});
+router.get(
+    '/kaisai/:kaisaiCd/summary',
+    async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+        console.log(`${req.url} was called.`);
+        try {
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const oddsTimeNo = 1;
+            // Service を呼び出す
+            const ret = await kaisaiService.getKaisaiSummary(kaisaiCd, oddsTimeNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
+            res.json(ret);
+        } catch (error) {
+            console.error('Error was occurred...', error);
+            res.status(500).json({ error });
+        }
+    });
+
+router.get(
+    '/kaisai/:kaisaiDt([0-9]{4}-[0-9]{2}-[0-9]{2})',
+    async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+        console.log(`${req.url} was called.`);
+        try {
+            // リクエストパラメータを取得
+            const kaisaiDt = req.params.kaisaiDt;
+            // Service を呼び出す
+            const ret = await kaisaiService.getKaisaiList(kaisaiDt);
+            // 結果を JSON 形式でレスポンスへ書き込む
+            res.json(ret);
+        } catch (error) {
+            console.error('Error was occurred...', error);
+            res.status(500).json({ error });
+        }
+    });
 
 router.get('/kaisai/:kaisaiCd', async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
     console.log(`${req.url} was called.`);

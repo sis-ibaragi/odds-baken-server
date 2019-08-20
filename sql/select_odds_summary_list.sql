@@ -54,7 +54,7 @@ from
 		and	ro.ODDS_TIME_NO = fk.ODDS_TIME_NO
 		and fk.SORT_NO = 8
 where
-	ka.KAISAI_DT = ?
+	ka.KAISAI_CD = ?
 order by
 	KAISAI_CD,
 	RACE_NO
