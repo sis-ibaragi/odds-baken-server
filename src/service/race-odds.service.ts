@@ -6,6 +6,7 @@ import { TanOddsRecord } from '../record/tan-odds-record';
 import { FukuOddsRecord } from '../record/fuku-odds-record';
 import { UmrnOddsRecord } from '../record/umrn-odds-record';
 import { TnpkOddsDiffRecord } from '../record/tnpk-odds-diff-record';
+import { RaceUmaRecord } from '../record/race-uma-record';
 
 export class RaceOddsService {
     constructor(private connPool: ConnectionPool) { }
@@ -200,6 +201,33 @@ export class RaceOddsService {
                 record.tanUpFlg = record.tanUpRt > 1;
                 record.fukuUpRt = record.fukuOdds1 / record.fukuOdds2;
                 record.fukuUpFlg = record.fukuUpRt > 1;
+                list.push(record);
+            });
+            await conn.commit();
+            return list;
+        } catch (error) {
+            await conn.rollback();
+            throw error;
+        } finally {
+            this.connPool.releaseConnection(conn);
+        }
+    }
+
+    async getRaceUmaList(kaisaiCd: string, raceNo: number): Promise<RaceUmaRecord[]> {
+        let conn: PoolConnection;
+        try {
+            conn = await this.connPool.getConnection();
+            await conn.beginTransaction();
+
+            const sql = fs.readFileSync(`${process.cwd()}/sql/select_uma_list.sql`, 'utf8');
+            const rows = await conn.query(sql, [kaisaiCd, raceNo]);
+            const list: RaceUmaRecord[] = [];
+            rows.forEach((data) => {
+                const record = new RaceUmaRecord();
+                record.umaNo = data['UMA_NO'];
+                record.wakuNo = data['WAKU_NO'];
+                record.umaNm = data['UMA_NM'];
+                record.jockeyNm = data['JOCKEY_NM'];
                 list.push(record);
             });
             await conn.commit();
