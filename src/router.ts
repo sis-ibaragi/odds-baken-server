@@ -169,6 +169,25 @@ router.get(
     },
 );
 
+router.get(
+    '/race/odds/:kaisaiCd/:raceNo/umalist',
+    async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+        console.log(`${req.url} was called.`);
+        try {
+            // リクエストパラメータを取得
+            const kaisaiCd = req.params.kaisaiCd;
+            const raceNo = req.params.raceNo;
+            // Service を呼び出す
+            const ret = await raceOddsService.getRaceUmaList(kaisaiCd, raceNo);
+            // 結果を JSON 形式でレスポンスへ書き込む
+            res.json(ret);
+        } catch (error) {
+            console.error('Error was occurred...', error);
+            res.status(500).json({ error });
+        }
+    },
+);
+
 router.post(
     '/race/odds/:kaisaiCd/:raceNo/:umaNo/mark',
     async (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
