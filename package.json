@@ -10,7 +10,7 @@
   "author": "kilimanjaro.jan",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "promise-mysql": "^3.3.2"
   },
   "devDependencies": {
